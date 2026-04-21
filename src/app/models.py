@@ -27,22 +27,12 @@ class IPv4NetworkType(TypeDecorator):
         return IPv4Network(value) if value is not None else value
 
 
-class Datacenter(Base):
-    """Datacenter is a network construct representing a virtual datacenter"""
-
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(255), unique=True)
-
-    __tablename__ = "datacenters"
-
-
 class Core(Base):
     """Core is a network construct in with subnets are located."""
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    datacenter_id: Mapped[int] = mapped_column(ForeignKey("datacenters.id"))
     name: Mapped[str] = mapped_column(String(255))
-    datacenter: Mapped["Datacenter"] = relationship()
+    datacenter: Mapped[str] = mapped_column(String(255))
     size: Mapped[int] = mapped_column(default=4096)
     group: Mapped[Optional[str]] = mapped_column(String(255), default=None)
 

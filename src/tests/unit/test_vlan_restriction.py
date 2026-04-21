@@ -9,15 +9,12 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  -----------------------------------------------------------------------------
 import pytest
-from app.models import Datacenter, Core, VlanRestrictionRange
+from app.models import Core, VlanRestrictionRange
+
 
 @pytest.fixture
-def datacenter():
-    return Datacenter(name="DDC")
-
-@pytest.fixture
-def core(datacenter):
-    return Core(datacenter=datacenter, name="Core01", size=4096)
+def core():
+    return Core(datacenter="DDC", name="Core01", size=4096)
 
 
 def test_vlan_restriction_range_initialization(core):

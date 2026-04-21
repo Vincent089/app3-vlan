@@ -10,13 +10,9 @@
 #  -----------------------------------------------------------------------------
 from marshmallow import Schema, fields
 
-class DatacenterSchema(Schema):
-    id = fields.Int(dump_only=True)
-    name = fields.Str(required=True)
-
 class CoreSchema(Schema):
     id = fields.Int(dump_only=True)
-    datacenter_id = fields.Int(required=True)
+    datacenter = fields.String(required=True)
     name = fields.Str(required=True)
     size = fields.Int()
     group = fields.Str(allow_none=True)

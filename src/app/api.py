@@ -9,12 +9,8 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  -----------------------------------------------------------------------------
 from flask import Blueprint, jsonify, request
-from app.services import DatacenterService, CoreService, VlanService
-from app.schemas import DatacenterSchema, CoreSchema, VlanSchema
-
-datacenters_bp = Blueprint("datacenters", __name__)
-datacenter_service = DatacenterService()
-datacenter_schema = DatacenterSchema()
+from app.services import CoreService, VlanService
+from app.schemas import CoreSchema, VlanSchema
 
 cores_bp = Blueprint("cores", __name__)
 core_service = CoreService()
@@ -24,59 +20,10 @@ vlans_bp = Blueprint("vlans", __name__)
 vlan_service = VlanService()
 vlan_schema = VlanSchema()
 
-
-@datacenters_bp.route("/", methods=["GET"])
-def list_datacenters():
-    datacenters = datacenter_service.list_datacenters()
-    return jsonify(datacenter_schema.dump(datacenters, many=True)), 200
-
-
-@datacenters_bp.route("/", methods=["POST"])
-def create_datacenter():
-    data = request.get_json()
-    errors = datacenter_schema.validate(data)
-    if errors:
-        return jsonify(errors), 400
-
-    datacenter = datacenter_service.create_datacenter(data["name"])
-    return jsonify(datacenter_schema.dump(datacenter)), 201
-
-
-@datacenters_bp.route("/<int:datacenter_id>", methods=["GET"])
-def get_datacenter(datacenter_id):
-    datacenter = datacenter_service.get_datacenter(datacenter_id)
-    if not datacenter:
-        return jsonify({"error": "Datacenter not found"}), 404
-
-    return jsonify(datacenter_schema.dump(datacenter)), 200
-
-
-@datacenters_bp.route("/<int:datacenter_id>", methods=["PUT"])
-def update_datacenter(datacenter_id):
-    data = request.get_json()
-    errors = datacenter_schema.validate(data, partial=True)
-    if errors:
-        return jsonify(errors), 400
-
-    datacenter = datacenter_service.update_datacenter(datacenter_id, data.get("name"))
-    if not datacenter:
-        return jsonify({"error": "Datacenter not found"}), 404
-
-    return jsonify(datacenter_schema.dump(datacenter)), 200
-
-
-@datacenters_bp.route("/<int:datacenter_id>", methods=["DELETE"])
-def delete_datacenter(datacenter_id):
-    if datacenter_service.delete_datacenter(datacenter_id):
-        return "", 204
-
-    return jsonify({"error": "Datacenter not found"}), 404
-
-
 @cores_bp.route("/", methods=["GET"])
 def list_cores():
-    datacenter_id = request.args.get("datacenter_id", type=int)
-    cores = core_service.list_cores(datacenter_id)
+    datacenter = request.args.get("datacenter", type=str)
+    cores = core_service.list_cores(datacenter)
     return jsonify(core_schema.dump(cores, many=True)), 200
 
 
@@ -88,7 +35,7 @@ def create_core():
         return jsonify(errors), 400
 
     core = core_service.create_core(
-        datacenter_id=data["datacenter_id"],
+        datacenter=data["datacenter"],
         name=data["name"],
         size=data.get("size", 4096),
         group=data.get("group")

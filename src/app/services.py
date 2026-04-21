@@ -10,52 +10,15 @@
 #  -----------------------------------------------------------------------------
 
 from typing import List, Optional
-from app.models import Datacenter, Core, Vlan, VlanRestrictionRange
+from app.models import Core, Vlan, VlanRestrictionRange
 from app.uow import UnitOfWork
-
-
-class DatacenterService:
-
-    def create_datacenter(self, name: str) -> Datacenter:
-        with UnitOfWork() as uow:
-            datacenter = Datacenter(name=name)
-            uow.datacenters.add(datacenter)
-
-            return datacenter
-
-    def get_datacenter(self, datacenter_id: int) -> Optional[Datacenter]:
-        with UnitOfWork() as uow:
-            return uow.datacenters.get(datacenter_id)
-
-    def list_datacenters(self) -> List[Datacenter]:
-        with UnitOfWork() as uow:
-            return uow.datacenters.list()
-
-    def update_datacenter(self, datacenter_id: int, name: str) -> Optional[Datacenter]:
-        with UnitOfWork() as uow:
-            datacenter = uow.datacenters.get(datacenter_id)
-
-            if datacenter:
-                datacenter.name = name
-
-            return datacenter
-
-    def delete_datacenter(self, datacenter_id: int) -> bool:
-        with UnitOfWork() as uow:
-            datacenter = uow.datacenters.get(datacenter_id)
-
-            if datacenter:
-                uow.datacenters.delete(datacenter)
-                return True
-
-            return False
 
 
 class CoreService:
 
-    def create_core(self, datacenter_id: int, name: str, size: int = 4096, group: Optional[str] = None) -> Core:
+    def create_core(self, datacenter: str, name: str, size: int = 4096, group: Optional[str] = None) -> Core:
         with UnitOfWork() as uow:
-            core = Core(datacenter_id=datacenter_id, name=name, size=size, group=group)
+            core = Core(datacenter=datacenter, name=name, size=size, group=group)
             uow.cores.add(core)
             return core
 
@@ -63,9 +26,9 @@ class CoreService:
         with UnitOfWork() as uow:
             return uow.cores.get(core_id)
 
-    def list_cores(self, datacenter_id: Optional[int] = None) -> List[Core]:
+    def list_cores(self, datacenter: Optional[str] = None) -> List[Core]:
         with UnitOfWork() as uow:
-            return uow.cores.list(datacenter_id)
+            return uow.cores.list(datacenter)
 
     def update_core(self, core_id: int, name: Optional[str] = None, size: Optional[int] = None,
                     group: Optional[str] = None) -> Optional[Core]:

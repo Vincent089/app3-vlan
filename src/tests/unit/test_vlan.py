@@ -11,17 +11,12 @@
 
 import pytest
 from ipaddress import IPv4Network
-from app.models import Datacenter, Core, Vlan
+from app.models import Core, Vlan
 
 
 @pytest.fixture
-def datacenter():
-    return Datacenter(name="DDC")
-
-
-@pytest.fixture
-def core(datacenter):
-    return Core(datacenter=datacenter, name="Core01", size=4096)
+def core():
+    return Core(datacenter="DDC", name="Core01", size=4096)
 
 
 @pytest.fixture

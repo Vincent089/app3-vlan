@@ -9,7 +9,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  -----------------------------------------------------------------------------
 from app.db import SessionLocal
-from app.repository import DatacenterRepository, CoreRepository, VlanRepository, VlanRestrictionRangeRepository
+from app.repository import CoreRepository, VlanRepository, VlanRestrictionRangeRepository
 
 class UnitOfWork:
 
@@ -19,7 +19,6 @@ class UnitOfWork:
     def __enter__(self):
         self.session = self.session_factory()
 
-        self.datacenters = DatacenterRepository(self.session)
         self.cores = CoreRepository(self.session)
         self.vlans = VlanRepository(self.session)
         self.ranges = VlanRestrictionRangeRepository(self.session)
