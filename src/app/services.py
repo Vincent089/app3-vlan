@@ -11,31 +11,31 @@
 
 from typing import List, Optional
 from app.models import Datacenter, Core, Vlan, VlanRestrictionRange
-from app.schemas import DatacenterSchema
+from app.schemas import DatacenterSchema, CoreSchema, VlanSchema
 from app.uow import UnitOfWork
 
 
 class DatacenterService:
-    datacenter_schema = DatacenterSchema()
+    schema = DatacenterSchema()
 
     def create_datacenter(self, name: str) -> Datacenter:
         with UnitOfWork() as uow:
             datacenter = Datacenter(name=name)
             uow.datacenters.add(datacenter)
 
-            return self.datacenter_schema.dump(
+            return self.schema.dump(
                 datacenter
             )
 
     def get_datacenter(self, datacenter_id: int) -> Optional[Datacenter]:
         with UnitOfWork() as uow:
-            return self.datacenter_schema.dump(
+            return self.schema.dump(
                 uow.datacenters.get(datacenter_id)
             )
 
     def list_datacenters(self) -> List[Datacenter]:
         with UnitOfWork() as uow:
-            return self.datacenter_schema.dump(
+            return self.schema.dump(
                 uow.datacenters.list(),
                 many=True
             )
@@ -47,7 +47,7 @@ class DatacenterService:
             if datacenter:
                 datacenter.name = name
 
-            return self.datacenter_schema.dump(
+            return self.schema.dump(
                 datacenter
             )
 
@@ -63,6 +63,7 @@ class DatacenterService:
 
 
 class CoreService:
+    schema = CoreSchema()
 
     def create_core(self, datacenter_id: int, name: str, size: int = 4096, group: Optional[str] = None) -> Core:
         with UnitOfWork() as uow:
@@ -101,17 +102,23 @@ class CoreService:
 
 
 class VlanService:
+    schema = VlanSchema()
 
     def get_vlan(self, vlan_id: int) -> Optional[Vlan]:
         with UnitOfWork() as uow:
-            return uow.vlans.get(vlan_id)
+            return self.schema.dump(
+                uow.vlans.get(vlan_id)
+            )
 
     def list_vlans(self, core_id: Optional[int]) -> List[Vlan]:
         with UnitOfWork() as uow:
             core = None
             if core_id:
                 core = uow.cores.get(core_id)
-            return uow.vlans.list(core)
+            return self.schema.dump(
+                uow.vlans.list(core),
+                many=True
+            )
 
 
 class VlanRestrictionService:

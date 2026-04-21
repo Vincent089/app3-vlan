@@ -67,7 +67,7 @@ def update_datacenter(datacenter_id):
     if not datacenter:
         return jsonify({"error": "Datacenter not found"}), 404
 
-    return jsonify(datacenter_schema.dump(datacenter)), 200
+    return jsonify(datacenter), 200
 
 
 @datacenters_bp.route("/int:datacenter_id", methods=["DELETE"])
@@ -83,7 +83,7 @@ def list_cores():
     datacenter_id = request.args.get("datacenter_id", type=int)
     cores = core_service.list_cores(datacenter_id)
 
-    return jsonify(core_schema.dump(cores, many=True)), 200
+    return jsonify(cores), 200
 
 @cores_bp.route("/", methods=["POST"])
 def create_core():
@@ -100,7 +100,7 @@ def create_core():
         group=data.get("group")
     )
 
-    return jsonify(core_schema.dump(core)), 201
+    return jsonify(core), 201
 
 @cores_bp.route("/int:core_id", methods=["GET"])
 def get_core(core_id):
@@ -109,7 +109,7 @@ def get_core(core_id):
     if not core:
         return jsonify({"error": "Core not found"}), 404
 
-    return jsonify(core_schema.dump(core)), 200
+    return jsonify(core), 200
 
 @cores_bp.route("/int:core_id", methods=["PUT"])
 def update_core(core_id):
@@ -129,7 +129,7 @@ def update_core(core_id):
     if not core:
         return jsonify({"error": "Core not found"}), 404
 
-    return jsonify(core_schema.dump(core)), 200
+    return jsonify(core), 200
 
 @cores_bp.route("/int:core_id", methods=["DELETE"])
 def delete_core(core_id):
@@ -142,4 +142,4 @@ def delete_core(core_id):
 def list_vlans():
     vlans = vlan_service.list_vlans(None)
 
-    return jsonify(vlan_schema.dump(vlans, many=True)), 200
+    return jsonify(vlans), 200
