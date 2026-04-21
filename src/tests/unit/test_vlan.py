@@ -11,7 +11,7 @@
 
 import pytest
 from ipaddress import IPv4Network
-from app.domain.models import Datacenter, Core, Vlan
+from app.models import Datacenter, Core, Vlan
 
 
 @pytest.fixture

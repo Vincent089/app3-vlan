@@ -9,7 +9,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  -----------------------------------------------------------------------------
 import pytest
-from app.domain.models import Datacenter, Core, VlanRestrictionRange
+from app.models import Datacenter, Core, VlanRestrictionRange
 
 @pytest.fixture
 def datacenter():
