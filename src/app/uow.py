@@ -28,8 +28,14 @@ class UnitOfWork:
 
     def __exit__(self, exc_type, exc, tb):
         if exc:
-            self.session.rollback()
+            self.rollback()
         else:
-            self.session.commit()
+            self.commit()
 
         self.session.close()
+
+    def commit(self):
+        self.session.commit()
+
+    def rollback(self):
+        self.session.rollback()
