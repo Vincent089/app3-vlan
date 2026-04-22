@@ -71,14 +71,6 @@ def update_core(core_id):
     return jsonify(core_schema.dump(core)), 200
 
 
-@cores_bp.route("/<int:core_id>", methods=["DELETE"])
-def delete_core(core_id):
-    if core_service.delete_core(core_id):
-        return "", 204
-
-    return jsonify({"error": "Core not found"}), 404
-
-
 @vlans_bp.route("/", methods=["GET"])
 def list_vlans():
     core_id = request.args.get("core_id", type=int)

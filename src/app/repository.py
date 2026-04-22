@@ -34,9 +34,6 @@ class CoreRepository:
             query = query.filter_by(datacenter=datacenter)
         return query.all()
 
-    def delete(self, core: Core):
-        self.session.delete(core)
-
 
 class VlanRepository:
 

@@ -44,14 +44,6 @@ class CoreService:
                     core.group = group
             return core
 
-    def delete_core(self, core_id: int) -> bool:
-        with UnitOfWork() as uow:
-            core = uow.cores.get(core_id)
-            if core:
-                uow.cores.delete(core)
-                return True
-            return False
-
 
 class VlanService:
 
