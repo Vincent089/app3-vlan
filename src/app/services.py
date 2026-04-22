@@ -8,6 +8,7 @@
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  -----------------------------------------------------------------------------
+import itertools
 
 from typing import List, Optional
 from ipaddress import IPv4Network
@@ -48,7 +49,7 @@ class CoreService:
 
 class VlanService:
 
-    def create_vlan(self, number: int, subnet: IPv4Network, core_id: int, gcode: str, purpose: str,
+    def create_vlan(self, subnet: IPv4Network, core_id: int, gcode: str, purpose: str, number: Optional[int] = None,
                     name: Optional[str] = None, description: Optional[str] = None) -> Vlan:
         with UnitOfWork() as uow:
             core = uow.cores.get(core_id)
@@ -56,18 +57,34 @@ class VlanService:
             if not core:
                 raise ValueError(f"Core with id {core_id} not found")
 
-            # Check if vlan number already exists in the same core
-            if uow.vlans.get_by_number(core, number):
-                raise ValueError(f"Vlan {number} already exists in core {core.name}")
+            if number:
+                # Check if vlan number already exists in the same core
+                if uow.vlans.get_by_number(core, number):
+                    raise ValueError(f"Vlan {number} already exists in core {core.name}")
 
-            # Check if vlan number already exists in the same core group
-            if core.group:
-                existing_vlan = uow.vlans.get_by_number_and_core_group(number, core.group)
+                # Check if vlan number already exists in the same core group
+                if core.group:
+                    existing_vlan = uow.vlans.get_by_number_and_core_group(number, core.group)
 
-                if existing_vlan:
-                    raise ValueError(
-                        f"Vlan {number} already exists in core {existing_vlan.core.name} (Group: {core.group})"
-                    )
+                    if existing_vlan:
+                        raise ValueError(
+                                f"Vlan {number} already exists in core {existing_vlan.core.name} (Group: {core.group})"
+                        )
+            else:
+                # Set number to next available in core group
+                vlans_in_group = uow.vlans.list_by_core_group(core.group)
+                restricted_vlan_ranges = uow.ranges.list(core)
+
+                used_vlan_numbers = [v.number for v in vlans_in_group]
+                restricted_numbers = list(itertools.chain(*[range(r.start, r.end + 1) for r in restricted_vlan_ranges]))
+                used_numbers = set(used_vlan_numbers + restricted_numbers)
+
+                if used_numbers:
+                    number = next(
+                            (i for i, n in enumerate(sorted(used_numbers), start=2) if n != i),
+                            max(used_vlan_numbers) + 1)
+                else:
+                    number = 2
 
             vlan = Vlan(number=number, subnet=subnet, core=core, gcode=gcode, purpose=purpose,
                         name=name, description=description)

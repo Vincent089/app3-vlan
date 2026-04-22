@@ -20,10 +20,12 @@ vlans_bp = Blueprint("vlans", __name__)
 vlan_service = VlanService()
 vlan_schema = VlanSchema()
 
+
 @cores_bp.route("/", methods=["GET"])
 def list_cores():
     datacenter = request.args.get("datacenter", type=str)
     cores = core_service.list_cores(datacenter)
+
     return jsonify(core_schema.dump(cores, many=True)), 200
 
 
@@ -35,11 +37,12 @@ def create_core():
         return jsonify(errors), 400
 
     core = core_service.create_core(
-        datacenter=data["datacenter"],
-        name=data["name"],
-        size=data.get("size", 4096),
-        group=data.get("group")
+            datacenter=data.get("datacenter"),
+            name=data.get("name"),
+            size=data.get("size", 4096),
+            group=data.get("group")
     )
+
     return jsonify(core_schema.dump(core)), 201
 
 
@@ -47,7 +50,7 @@ def create_core():
 def get_core(core_id):
     core = core_service.get_core(core_id)
     if not core:
-        return jsonify({"error": "Core not found"}), 404
+        return jsonify({ "error": "Core not found" }), 404
 
     return jsonify(core_schema.dump(core)), 200
 
@@ -60,12 +63,12 @@ def update_core(core_id):
         return jsonify(errors), 400
 
     core = core_service.update_core(
-        core_id,
-        name=data.get("name"),
-        group=data.get("group")
+            core_id,
+            name=data.get("name"),
+            group=data.get("group")
     )
     if not core:
-        return jsonify({"error": "Core not found"}), 404
+        return jsonify({ "error": "Core not found" }), 404
 
     return jsonify(core_schema.dump(core)), 200
 
@@ -74,13 +77,34 @@ def update_core(core_id):
 def list_vlans():
     core_id = request.args.get("core_id", type=int)
     vlans = vlan_service.list_vlans(core_id)
+
     return jsonify(vlan_schema.dump(vlans, many=True)), 200
+
+
+@vlans_bp.route("/", methods=["POST"])
+def create_vlan():
+    data = request.get_json()
+    errors = vlan_schema.validate(data)
+    if errors:
+        return jsonify(errors), 400
+
+    vlan = vlan_service.create_vlan(
+            number=data.get('number'),
+            subnet=data.get('subnet'),
+            core_id=data.get('core_id'),
+            gcode=data.get('gcode'),
+            purpose=data.get('purpose'),
+            name=data.get('name'),
+            description=data.get('description')
+    )
+
+    return jsonify(vlan_schema.dump(vlan)), 201
 
 
 @vlans_bp.route("/<int:vlan_id>", methods=["GET"])
 def get_vlan(vlan_id):
     vlan = vlan_service.get_vlan(vlan_id)
     if not vlan:
-        return jsonify({"error": "Vlan not found"}), 404
+        return jsonify({ "error": "Vlan not found" }), 404
 
     return jsonify(vlan_schema.dump(vlan)), 200

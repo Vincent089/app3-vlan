@@ -20,9 +20,9 @@ class CoreSchema(Schema):
 class VlanSchema(Schema):
     id = fields.Int(dump_only=True)
     core_id = fields.Int(required=True)
-    number = fields.Int(attribute="_number", required=True)
+    number = fields.Int()
     subnet = fields.Str(required=True)
     gcode = fields.Str(required=True)
     purpose = fields.Str(required=True)
-    name = fields.Str(attribute="_name", dump_only=True)
+    name = fields.Str()
     description = fields.Str(allow_none=True)

@@ -52,6 +52,9 @@ class VlanRepository:
     def get_by_number_and_core_group(self, number: int, group: str) -> Optional[Vlan]:
         return self.session.query(Vlan).join(Core).filter(Core.group == group, Vlan._number == number).first()
 
+    def list_by_core_group(self, group: str) -> list[type[Vlan]]:
+        return self.session.query(Vlan).join(Core).filter_by(group=group).all()
+
     def list(self, core: Optional[Core] = None) -> list[type[Vlan]]:
         query = self.session.query(Vlan)
         if core:
@@ -75,7 +78,7 @@ class VlanRestrictionRangeRepository:
 
     def get_by_range(self, core: Core, start: int, end: int) -> Optional[VlanRestrictionRange]:
         return self.session.query(VlanRestrictionRange).filter_by(
-            core=core, _start=start, _end=end
+                core=core, _start=start, _end=end
         ).first()
 
     def list(self, core: Optional[Core] = None) -> list[type[VlanRestrictionRange]]:
@@ -83,6 +86,9 @@ class VlanRestrictionRangeRepository:
         if core:
             query = query.filter_by(core=core)
         return query.all()
+
+    def list_by_core_group(self, group: str) -> list[type[VlanRestrictionRange]]:
+        return self.session.query(VlanRestrictionRange).join(Core).filter_by(group=group).all()
 
     def delete(self, range: VlanRestrictionRange):
         self.session.delete(range)
