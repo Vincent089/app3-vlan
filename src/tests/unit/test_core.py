@@ -31,7 +31,7 @@ def test_core_size_limit():
         Core(datacenter="DDC", name="Core01", size=5000)
 
 
-def test_core_size_update_limit():
+def test_core_size_update_locked():
     core = Core(datacenter="DDC", name="Core01", size=1024)
-    with pytest.raises(ValueError, match="Core size must be between 1 and 4096"):
+    with pytest.raises(AttributeError, match="Cannot modify read-only attribute 'size'"):
         core.size = 8192

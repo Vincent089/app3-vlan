@@ -42,8 +42,11 @@ class Core(Base):
     def __init__(self, datacenter: str, name: str, size: int = 4096, group: Optional[str] = None):
         self.datacenter = datacenter
         self.name = name
-        self.size = size
         self.group = group
+
+        if 0 < size > 4096:
+            raise ValueError("Core size must be between 1 and 4096")
+        self._size = size
 
     def __repr__(self):
         return f'<Core {self.name} ({self.datacenter})>'
@@ -57,9 +60,7 @@ class Core(Base):
 
     @size.setter
     def size(self, value: int):
-        if 0 < value > 4096:
-            raise ValueError("Core size must be between 1 and 4096")
-        self._size = value
+        raise AttributeError("Cannot modify read-only attribute 'size'")
 
 
 class VlanRestrictionRange(Base):
