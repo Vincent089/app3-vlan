@@ -35,13 +35,17 @@ class CoreService:
                     group: Optional[str] = None) -> Optional[Core]:
         with UnitOfWork() as uow:
             core = uow.cores.get(core_id)
-            if core:
-                if name is not None:
-                    core.name = name
-                if size is not None:
-                    core.size = size
-                if group is not None:
-                    core.group = group
+
+            if not core:
+                return None
+
+            if name is not None:
+                core.name = name
+            if size is not None:
+                core.size = size
+            if group is not None:
+                core.group = group
+
             return core
 
 
@@ -51,6 +55,7 @@ class VlanService:
                     name: Optional[str] = None, description: Optional[str] = None) -> Vlan:
         with UnitOfWork() as uow:
             core = uow.cores.get(core_id)
+
             if not core:
                 raise ValueError(f"Core with id {core_id} not found")
 
@@ -61,6 +66,7 @@ class VlanService:
             # Check if vlan number already exists in the same core group
             if core.group:
                 existing_vlan = uow.vlans.get_by_number_and_core_group(number, core.group)
+
                 if existing_vlan:
                     raise ValueError(
                         f"Vlan {number} already exists in core {existing_vlan.core.name} (Group: {core.group})"
