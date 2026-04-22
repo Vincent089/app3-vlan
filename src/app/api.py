@@ -62,7 +62,6 @@ def update_core(core_id):
     core = core_service.update_core(
         core_id,
         name=data.get("name"),
-        size=data.get("size"),
         group=data.get("group")
     )
     if not core:

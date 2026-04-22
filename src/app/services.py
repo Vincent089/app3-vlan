@@ -31,8 +31,7 @@ class CoreService:
         with UnitOfWork() as uow:
             return uow.cores.list(datacenter)
 
-    def update_core(self, core_id: int, name: Optional[str] = None, size: Optional[int] = None,
-                    group: Optional[str] = None) -> Optional[Core]:
+    def update_core(self, core_id: int, name: Optional[str] = None, group: Optional[str] = None) -> Optional[Core]:
         with UnitOfWork() as uow:
             core = uow.cores.get(core_id)
 
@@ -41,8 +40,6 @@ class CoreService:
 
             if name is not None:
                 core.name = name
-            if size is not None:
-                core.size = size
             if group is not None:
                 core.group = group
 
