@@ -52,6 +52,9 @@ class VlanRepository:
     def get_by_number(self, core: Core, number: int) -> Optional[Vlan]:
         return self.session.query(Vlan).filter_by(core=core, _number=number).first()
 
+    def get_by_number_and_core_group(self, number: int, group: str) -> Optional[Vlan]:
+        return self.session.query(Vlan).join(Core).filter(Core.group == group, Vlan._number == number).first()
+
     def list(self, core: Optional[Core] = None) -> list[type[Vlan]]:
         query = self.session.query(Vlan)
         if core:

@@ -6,3 +6,9 @@ run:
 
 unit-test:
 	pytest src/tests/unit
+
+integration-test:
+	pytest src/tests/integration
+
+test:
+	pytest src/tests

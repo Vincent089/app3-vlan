@@ -10,6 +10,7 @@
 #  -----------------------------------------------------------------------------
 
 from typing import List, Optional
+from ipaddress import IPv4Network
 from app.models import Core, Vlan, VlanRestrictionRange
 from app.uow import UnitOfWork
 
@@ -53,6 +54,30 @@ class CoreService:
 
 
 class VlanService:
+
+    def create_vlan(self, number: int, subnet: IPv4Network, core_id: int, gcode: str, purpose: str,
+                    name: Optional[str] = None, description: Optional[str] = None) -> Vlan:
+        with UnitOfWork() as uow:
+            core = uow.cores.get(core_id)
+            if not core:
+                raise ValueError(f"Core with id {core_id} not found")
+
+            # Check if vlan number already exists in the same core
+            if uow.vlans.get_by_number(core, number):
+                raise ValueError(f"Vlan {number} already exists in core {core.name}")
+
+            # Check if vlan number already exists in the same core group
+            if core.group:
+                existing_vlan = uow.vlans.get_by_number_and_core_group(number, core.group)
+                if existing_vlan:
+                    raise ValueError(
+                        f"Vlan {number} already exists in core {existing_vlan.core.name} (Group: {core.group})"
+                    )
+
+            vlan = Vlan(number=number, subnet=subnet, core=core, gcode=gcode, purpose=purpose,
+                        name=name, description=description)
+            uow.vlans.add(vlan)
+            return vlan
 
     def get_vlan(self, vlan_id: int) -> Optional[Vlan]:
         with UnitOfWork() as uow:
