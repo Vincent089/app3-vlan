@@ -54,6 +54,11 @@ class Core(Base):
     def __hash__(self):
         return hash((self.name, self.datacenter))
 
+    def __eq__(self, other):
+        if not isinstance(other, Core):
+            return False
+        return self.name == other.name and self.datacenter == other.datacenter
+
     @property
     def size(self) -> int:
         return self._size
