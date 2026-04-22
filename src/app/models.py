@@ -11,7 +11,7 @@
 
 from typing import Optional
 from ipaddress import IPv4Network
-from sqlalchemy import String, ForeignKey, Text, TypeDecorator
+from sqlalchemy import String, ForeignKey, Text, TypeDecorator, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db import Base
 
@@ -33,10 +33,27 @@ class Core(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(255))
     datacenter: Mapped[str] = mapped_column(String(255))
-    size: Mapped[int] = mapped_column(default=4096)
+    _size: Mapped[int] = mapped_column("size", default=4096)
     group: Mapped[Optional[str]] = mapped_column(String(255), default=None)
 
     __tablename__ = "cores"
+    __table_args__ = (UniqueConstraint('datacenter', 'name', name='_datacenter_core_uc'),)
+
+    def __init__(self, datacenter: str, name: str, size: int = 4096, group: Optional[str] = None):
+        self.datacenter = datacenter
+        self.name = name
+        self.size = size
+        self.group = group
+
+    @property
+    def size(self) -> int:
+        return self._size
+
+    @size.setter
+    def size(self, value: int):
+        if 0 < value > 4096:
+            raise ValueError("Core size must be between 1 and 4096")
+        self._size = value
 
 
 class VlanRestrictionRange(Base):
@@ -81,24 +98,24 @@ class VlanRestrictionRange(Base):
             )
 
     @property
-    def start(self):
+    def start(self) -> int:
         return self._start
 
     @start.setter
-    def start(self, start_value):
-        if not (1 <= start_value <= self._end and start_value <= self.core.size):
+    def start(self, value: int):
+        if not (1 <= value <= self._end and value <= self.core.size):
             raise ValueError('Start must be between 1 and the core size and less than or equal to end.')
-        self._start = start_value
+        self._start = value
 
     @property
-    def end(self):
+    def end(self) -> int:
         return self._end
 
     @end.setter
-    def end(self, end_value):
-        if not (self._start <= end_value <= self.core.size):
+    def end(self, value: int):
+        if not (self._start <= value <= self.core.size):
             raise ValueError('End must be between the start and the core size.')
-        self._end = end_value
+        self._end = value
 
 
 class Vlan(Base):
@@ -141,7 +158,7 @@ class Vlan(Base):
         return hash((self.number, self.core))
 
     @property
-    def number(self):
+    def number(self) -> int:
         return self._number
 
     @number.setter
@@ -155,7 +172,7 @@ class Vlan(Base):
         self._number = number
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @name.setter
