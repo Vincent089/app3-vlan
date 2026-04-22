@@ -60,3 +60,24 @@ def test_vlan_equality(core, subnet):
     vlan3 = Vlan(number=20, subnet=subnet, core=core, gcode="G123", purpose='test-vlan')
     assert vlan1 == vlan2
     assert vlan1 != vlan3
+
+def test_vlan_sorting(core, subnet):
+    vlan1 = Vlan(number=10, subnet=subnet, core=core, gcode="G123", purpose='test-vlan')
+    vlan2 = Vlan(number=30, subnet=subnet, core=core, gcode="G456", purpose='test-vlan')
+    vlan3 = Vlan(number=20, subnet=subnet, core=core, gcode="G123", purpose='test-vlan')
+
+    vlans = [vlan1, vlan2, vlan3]
+    sorted_vlans = sorted(vlans)
+
+    assert sorted_vlans == [vlan1, vlan3, vlan2]
+
+
+def test_vlan_max_select(core, subnet):
+    vlan1 = Vlan(number=10, subnet=subnet, core=core, gcode="G123", purpose='test-vlan')
+    vlan2 = Vlan(number=30, subnet=subnet, core=core, gcode="G456", purpose='test-vlan')
+    vlan3 = Vlan(number=20, subnet=subnet, core=core, gcode="G123", purpose='test-vlan')
+
+    vlans = [vlan1, vlan2, vlan3]
+    max_vlan = max(vlans)
+
+    assert max_vlan == vlan2

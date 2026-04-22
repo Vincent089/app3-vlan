@@ -164,6 +164,29 @@ class Vlan(Base):
     def __hash__(self):
         return hash((self.number, self.core))
 
+    def __lt__(self, other):
+        if not isinstance(other, Vlan):
+            return NotImplemented
+        if self.core.name != other.core.name:
+            return self.core.name < other.core.name
+        return self.number < other.number
+
+    def __le__(self, other):
+        if not isinstance(other, Vlan):
+            return NotImplemented
+        return self < other or self == other
+
+    def __gt__(self, other):
+        if not isinstance(other, Vlan):
+            return NotImplemented
+        return not self <= other
+
+    def __ge__(self, other):
+        if not isinstance(other, Vlan):
+            return NotImplemented
+        return not self < other
+
+
     @property
     def number(self) -> int:
         return self._number
