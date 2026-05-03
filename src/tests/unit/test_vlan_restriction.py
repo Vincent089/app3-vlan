@@ -52,5 +52,5 @@ def test_vlan_restriction_range_repr(core):
 
 def test_vlan_restriction_range_array(core):
     vlan_range = VlanRestrictionRange(core=core, description='test range', start=10, end=20)
-    expected_range = range(10, 21)  # range is exclusive of the end value, so 20 + 1 = 21
-    assert list(vlan_range.range_array) == list(expected_range)
+    expected_range = range(10, 21)
+    assert vlan_range.range_array == list(expected_range)
