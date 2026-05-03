@@ -1,4 +1,5 @@
-#   -----------------------------------------------------------------------------#  Copyright (c) 2026. Vincent Corriveau (vincent.corriveau89@gmail.com)
+#   -----------------------------------------------------------------------------
+#  Copyright (c) 2026. Vincent Corriveau (vincent.corriveau89@gmail.com)
 #
 #  Licensed under the MIT License. You may obtain a copy of the License at
 #  https://opensource.org/licenses/MIT
@@ -13,7 +14,7 @@ from typing import List, Optional
 from ipaddress import IPv4Network
 from app.models import Core, Vlan, VlanRestrictionRange
 from app.uow import UnitOfWork
-
+from common.execptions import DomainError, NotFoundError, AlreadyExistsError
 
 class CoreService:
 
@@ -36,7 +37,7 @@ class CoreService:
             core = uow.cores.get(core_id)
 
             if not core:
-                return None
+                raise NotFoundError(f"Core with id {core_id} not found")
 
             if name is not None:
                 core.name = name
@@ -44,6 +45,21 @@ class CoreService:
                 core.group = group
 
             return core
+
+    def delete_core(self, core_id: int) -> bool:
+        with UnitOfWork() as uow:
+            core = uow.cores.get(core_id)
+
+            if not core:
+                raise NotFoundError(f"Core with id {core_id} not found")
+
+            # Check for attached VLANs
+            vlans = uow.vlans.list(core)
+            if vlans:
+                raise DomainError(f"Core {core.name} has attached VLANs and cannot be deleted.")
+
+            uow.cores.delete(core)
+            return True
 
 
 class VlanService:
@@ -54,19 +70,19 @@ class VlanService:
             core = uow.cores.get(core_id)
 
             if not core:
-                raise ValueError(f"Core with id {core_id} not found")
+                raise NotFoundError(f"Core with id {core_id} not found")
 
             if number:
                 # Check if vlan number already exists in the same core
                 if uow.vlans.get_by_number(core, number):
-                    raise ValueError(f"Vlan {number} already exists in core {core.name}")
+                    raise AlreadyExistsError(f"Vlan {number} already exists in core {core.name}")
 
                 # Check if vlan number already exists in the same core group
                 if core.group:
                     existing_vlan = uow.vlans.get_by_number_and_core_group(number, core.group)
 
                     if existing_vlan:
-                        raise ValueError(
+                        raise AlreadyExistsError(
                                 f"Vlan {number} already exists in core {existing_vlan.core.name} (Group: {core.group})"
                         )
             else:
@@ -95,6 +111,10 @@ class VlanService:
     def get_vlan_by_number(self, core_id: int, vlan_number: int) -> Optional[Vlan]:
         with UnitOfWork() as uow:
             core = uow.cores.get(core_id)
+
+            if not core:
+                raise NotFoundError(f"Core with id {core_id} not found")
+
             return uow.vlans.get_by_number(core, vlan_number)
 
     def list_vlans(self, core_id: Optional[int]) -> List[Vlan]:
@@ -117,7 +137,7 @@ class VlanService:
                 vlan = uow.vlans.get(vlan_id)
 
             if not vlan:
-                return None
+                raise NotFoundError(f"Vlan not found")
 
             if name is not None:
                 vlan.name = name
@@ -141,7 +161,7 @@ class VlanService:
                 vlan = uow.vlans.get(vlan_id)
 
             if not vlan:
-                return None
+                raise NotFoundError(f"Vlan not found")
 
             uow.vlans.delete(vlan)
             return True

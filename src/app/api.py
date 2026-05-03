@@ -25,7 +25,6 @@ vlan_schema = VlanSchema()
 def list_cores():
     datacenter = request.args.get("datacenter", type=str)
     cores = core_service.list_cores(datacenter)
-
     return jsonify(core_schema.dump(cores, many=True)), 200
 
 
@@ -42,7 +41,6 @@ def create_core():
             size=data.get("size", 4096),
             group=data.get("group")
     )
-
     return jsonify(core_schema.dump(core)), 201
 
 
@@ -51,7 +49,6 @@ def get_core(core_id):
     core = core_service.get_core(core_id)
     if not core:
         return jsonify({ "error": "Core not found" }), 404
-
     return jsonify(core_schema.dump(core)), 200
 
 
@@ -67,16 +64,18 @@ def update_core(core_id):
             name=data.get("name"),
             group=data.get("group")
     )
-    if not core:
-        return jsonify({ "error": "Core not found" }), 404
-
     return jsonify(core_schema.dump(core)), 200
+
+
+@cores_bp.route("/<int:core_id>", methods=["DELETE"])
+def delete_core(core_id):
+    core_service.delete_core(core_id)
+    return { }, 204
 
 
 @cores_bp.route("/<int:core_id>/vlans", methods=["GET"])
 def list_core_vlans(core_id):
     vlans = vlan_service.list_vlans(core_id)
-
     return jsonify(vlan_schema.dump(vlans, many=True)), 200
 
 
@@ -96,17 +95,14 @@ def create_core_vlan(core_id):
             name=data.get('name'),
             description=data.get('description')
     )
-
     return jsonify(vlan_schema.dump(vlan)), 201
 
 
 @cores_bp.route("/<int:core_id>/vlans/<int:vlan_number>", methods=["GET"])
 def get_core_vlan(core_id, vlan_number):
     vlan = vlan_service.get_vlan_by_number(core_id, vlan_number)
-
     if not vlan:
         return jsonify({ "error": "Vlan not found" }), 404
-
     return jsonify(vlan_schema.dump(vlan)), 200
 
 
@@ -125,20 +121,12 @@ def update_core_vlan(core_id, vlan_number):
             gcode=data.get('gcode'),
             purpose=data.get('purpose')
     )
-
-    if not vlan:
-        return jsonify({ "error": "Vlan not found" }), 404
-
     return jsonify(vlan_schema.dump(vlan)), 200
 
 
 @cores_bp.route("/<int:core_id>/vlans/<int:vlan_number>", methods=["DELETE"])
 def delete_core_vlan(core_id, vlan_number):
-    vlan = vlan_service.delete_vlan(core_id=core_id, number=vlan_number)
-
-    if vlan is None:
-        return jsonify({ "error": "Vlan not found" }), 404
-
+    vlan_service.delete_vlan(core_id=core_id, number=vlan_number)
     return { }, 204
 
 
@@ -146,7 +134,6 @@ def delete_core_vlan(core_id, vlan_number):
 def list_vlans():
     core_id = request.args.get("core_id", type=int)
     vlans = vlan_service.list_vlans(core_id)
-
     return jsonify(vlan_schema.dump(vlans, many=True)), 200
 
 
@@ -166,7 +153,6 @@ def create_vlan():
             name=data.get('name'),
             description=data.get('description')
     )
-
     return jsonify(vlan_schema.dump(vlan)), 201
 
 
@@ -175,12 +161,11 @@ def get_vlan(vlan_id):
     vlan = vlan_service.get_vlan(vlan_id)
     if not vlan:
         return jsonify({ "error": "Vlan not found" }), 404
-
     return jsonify(vlan_schema.dump(vlan)), 200
 
 
 @vlans_bp.route("/<uuid:vlan_id>", methods=["PATCH"])
-def update_core_vlan(vlan_id):
+def update_vlan(vlan_id):
     data = request.get_json()
     errors = vlan_schema.validate(data, partial=True)
     if errors:
@@ -193,18 +178,10 @@ def update_core_vlan(vlan_id):
             gcode=data.get('gcode'),
             purpose=data.get('purpose')
     )
-
-    if not vlan:
-        return jsonify({ "error": "Vlan not found" }), 404
-
     return jsonify(vlan_schema.dump(vlan)), 200
 
 
 @vlans_bp.route("/<uuid:vlan_id>", methods=["DELETE"])
 def delete_vlan(vlan_id):
-    vlan = vlan_service.delete_vlan(vlan_id=vlan_id)
-
-    if vlan is None:
-        return jsonify({ "error": "Vlan not found" }), 404
-
+    vlan_service.delete_vlan(vlan_id=vlan_id)
     return { }, 204
