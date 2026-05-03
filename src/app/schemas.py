@@ -18,7 +18,7 @@ class CoreSchema(Schema):
     group = fields.Str(allow_none=True)
 
 class VlanSchema(Schema):
-    id = fields.Int(dump_only=True)
+    id = fields.UUID(dump_only=True)
     core_id = fields.Int(required=True)
     number = fields.Int()
     subnet = fields.Str(required=True)

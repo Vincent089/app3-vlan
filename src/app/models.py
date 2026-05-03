@@ -9,9 +9,10 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  -----------------------------------------------------------------------------
 
+import uuid
 from typing import Optional
 from ipaddress import IPv4Network
-from sqlalchemy import String, ForeignKey, Text, TypeDecorator, UniqueConstraint, PrimaryKeyConstraint
+from sqlalchemy import String, ForeignKey, Text, TypeDecorator, UniqueConstraint, PrimaryKeyConstraint, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db import Base
 
@@ -137,6 +138,7 @@ class VlanRestrictionRange(Base):
 class Vlan(Base):
     """VLAN is a network construct defining a subnet within a core"""
 
+    id: Mapped[uuid.UUID] = mapped_column(UUID(), default=uuid.uuid4)
     core_id: Mapped[int] = mapped_column(ForeignKey("cores.id"))
     _number: Mapped[int] = mapped_column("number")
     subnet: Mapped[IPv4Network] = mapped_column(IPv4NetworkType(255))

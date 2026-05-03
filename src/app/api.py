@@ -101,7 +101,7 @@ def create_vlan():
     return jsonify(vlan_schema.dump(vlan)), 201
 
 
-@vlans_bp.route("/<int:vlan_id>", methods=["GET"])
+@vlans_bp.route("/<uuid:vlan_id>", methods=["GET"])
 def get_vlan(vlan_id):
     vlan = vlan_service.get_vlan(vlan_id)
     if not vlan:

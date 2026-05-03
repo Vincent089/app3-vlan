@@ -1,5 +1,4 @@
-#   -----------------------------------------------------------------------------
-#  Copyright (c) 2026. Vincent Corriveau (vincent.corriveau89@gmail.com)
+#   -----------------------------------------------------------------------------#  Copyright (c) 2026. Vincent Corriveau (vincent.corriveau89@gmail.com)
 #
 #  Licensed under the MIT License. You may obtain a copy of the License at
 #  https://opensource.org/licenses/MIT
@@ -9,7 +8,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  -----------------------------------------------------------------------------
 import itertools
-
+import uuid
 from typing import List, Optional
 from ipaddress import IPv4Network
 from app.models import Core, Vlan, VlanRestrictionRange
@@ -89,7 +88,7 @@ class VlanService:
             uow.vlans.add(vlan)
             return vlan
 
-    def get_vlan(self, vlan_id: int) -> Optional[Vlan]:
+    def get_vlan(self, vlan_id: uuid.UUID) -> Optional[Vlan]:
         with UnitOfWork() as uow:
             return uow.vlans.get(vlan_id)
 

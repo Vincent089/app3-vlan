@@ -8,7 +8,7 @@
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  -----------------------------------------------------------------------------
-
+import uuid
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from app.models import Core, Vlan, VlanRestrictionRange
@@ -43,7 +43,7 @@ class VlanRepository:
     def add(self, vlan: Vlan):
         self.session.add(vlan)
 
-    def get(self, vlan_id: int) -> Optional[Vlan]:
+    def get(self, vlan_id: uuid.UUID) -> Optional[Vlan]:
         return self.session.query(Vlan).filter_by(id=vlan_id).first()
 
     def get_by_number(self, core: Core, number: int) -> Optional[Vlan]:
