@@ -129,6 +129,10 @@ class VlanRestrictionRange(Base):
             raise ValueError('End must be between the start and the core size.')
         self._end = value
 
+    @property
+    def range_array(self):
+        return list(range(self.start, self.end + 1))
+
 
 class Vlan(Base):
     """VLAN is a network construct defining a subnet within a core"""
