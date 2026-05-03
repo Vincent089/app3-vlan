@@ -35,3 +35,10 @@ def test_core_size_update_locked():
     core = Core(datacenter="DDC", name="Core01", size=1024)
     with pytest.raises(AttributeError, match="Cannot modify read-only attribute 'size'"):
         core.size = 8192
+
+
+def test_core_name_always_uppercase():
+    core = Core(datacenter="DDC", name="core01")
+    assert core.name == "CORE01"
+    core_mixed = Core(datacenter="DDC", name="Core-Test")
+    assert core_mixed.name == "CORE-TEST"
