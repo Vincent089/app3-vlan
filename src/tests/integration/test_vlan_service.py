@@ -68,7 +68,7 @@ def test_vlan_next_available_number_attribution(mock_uow, core, subnet):
     vlan1 = Vlan(number=2, subnet=subnet, core=core, gcode="G123", purpose='test-vlan')
     vlan2 = Vlan(number=4, subnet=subnet, core=core, gcode="G456", purpose='test-vlan')
     vrange1 = VlanRestrictionRange(start=4, end=10, core=core, description='test-range')
-    vrange2 = VlanRestrictionRange(start=20, end=30, core=core, description='test-range')
+    vrange2 = VlanRestrictionRange(start=12, end=30, core=core, description='test-range')
 
     mock_uow.__enter__.return_value = mock_uow
 
@@ -88,3 +88,9 @@ def test_vlan_next_available_number_attribution(mock_uow, core, subnet):
     vlan4 = service.create_vlan(subnet=subnet, core_id=1, gcode="G123", purpose='test')
 
     assert vlan4.number == 11
+
+    mock_uow.vlans.list_by_core_group.return_value = MagicMock(spec=List[Vlan],
+                                                               __iter__=lambda x: iter([vlan1, vlan2, vlan3, vlan4]))
+    vlan5 = service.create_vlan(subnet=subnet, core_id=1, gcode="G123", purpose='test')
+
+    assert vlan5.number == 31

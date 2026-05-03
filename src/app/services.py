@@ -76,15 +76,13 @@ class VlanService:
                 restricted_vlan_ranges = uow.ranges.list(core)
 
                 used_vlan_numbers = [v.number for v in vlans_in_group]
-                restricted_numbers = list(itertools.chain(*[range(r.start, r.end + 1) for r in restricted_vlan_ranges]))
+                restricted_numbers = list(itertools.chain(*[r.range_array for r in restricted_vlan_ranges]))
                 used_numbers = set(used_vlan_numbers + restricted_numbers)
 
-                if used_numbers:
-                    number = next(
-                            (i for i, n in enumerate(sorted(used_numbers), start=2) if n != i),
-                            max(used_vlan_numbers) + 1)
-                else:
-                    number = 2
+                number = 2
+
+                while number in used_numbers:
+                    number += 1
 
             vlan = Vlan(number=number, subnet=subnet, core=core, gcode=gcode, purpose=purpose,
                         name=name, description=description)
