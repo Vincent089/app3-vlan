@@ -32,7 +32,7 @@ class Core(Base):
     """Core is a network construct in with subnets are located."""
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(255))
+    _name: Mapped[str] = mapped_column("name")
     datacenter: Mapped[str] = mapped_column(String(255))
     _size: Mapped[int] = mapped_column("size", default=4096)
     group: Mapped[Optional[str]] = mapped_column(String(255), default=None)
@@ -42,7 +42,7 @@ class Core(Base):
 
     def __init__(self, datacenter: str, name: str, size: int = 4096, group: Optional[str] = None):
         self.datacenter = datacenter
-        self.name = name
+        self.name = name.upper()
         self.group = group
 
         if 0 < size > 4096:
@@ -59,6 +59,14 @@ class Core(Base):
         if not isinstance(other, Core):
             return False
         return self.name == other.name and self.datacenter == other.datacenter
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @name.setter
+    def name(self, value: str):
+        self._name = value.upper()
 
     @property
     def size(self) -> int:
