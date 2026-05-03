@@ -55,7 +55,7 @@ def get_core(core_id):
     return jsonify(core_schema.dump(core)), 200
 
 
-@cores_bp.route("/<int:core_id>", methods=["PUT"])
+@cores_bp.route("/<int:core_id>", methods=["PATCH"])
 def update_core(core_id):
     data = request.get_json()
     errors = core_schema.validate(data, partial=True)
