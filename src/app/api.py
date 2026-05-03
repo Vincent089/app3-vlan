@@ -73,6 +73,75 @@ def update_core(core_id):
     return jsonify(core_schema.dump(core)), 200
 
 
+@cores_bp.route("/<int:core_id>/vlans", methods=["GET"])
+def list_core_vlans(core_id):
+    vlans = vlan_service.list_vlans(core_id)
+
+    return jsonify(vlan_schema.dump(vlans, many=True)), 200
+
+
+@cores_bp.route("/<int:core_id>/vlans", methods=["POST"])
+def create_core_vlan(core_id):
+    data = request.get_json()
+    errors = vlan_schema.validate(data, partial=('core_id',))
+    if errors:
+        return jsonify(errors), 400
+
+    vlan = vlan_service.create_vlan(
+            number=data.get('number'),
+            subnet=data.get('subnet'),
+            core_id=core_id,
+            gcode=data.get('gcode'),
+            purpose=data.get('purpose'),
+            name=data.get('name'),
+            description=data.get('description')
+    )
+
+    return jsonify(vlan_schema.dump(vlan)), 201
+
+
+@cores_bp.route("/<int:core_id>/vlans/<int:vlan_number>", methods=["GET"])
+def get_core_vlan(core_id, vlan_number):
+    vlan = vlan_service.get_vlan_by_number(core_id, vlan_number)
+
+    if not vlan:
+        return jsonify({ "error": "Vlan not found" }), 404
+
+    return jsonify(vlan_schema.dump(vlan)), 200
+
+
+@cores_bp.route("/<int:core_id>/vlans/<int:vlan_number>", methods=["PATCH"])
+def update_core_vlan(core_id, vlan_number):
+    data = request.get_json()
+    errors = vlan_schema.validate(data, partial=True)
+    if errors:
+        return jsonify(errors), 400
+
+    vlan = vlan_service.update_vlan(
+            core_id=core_id,
+            number=vlan_number,
+            name=data.get('name'),
+            description=data.get('description'),
+            gcode=data.get('gcode'),
+            purpose=data.get('purpose')
+    )
+
+    if not vlan:
+        return jsonify({ "error": "Vlan not found" }), 404
+
+    return jsonify(vlan_schema.dump(vlan)), 200
+
+
+@cores_bp.route("/<int:core_id>/vlans/<int:vlan_number>", methods=["DELETE"])
+def delete_core_vlan(core_id, vlan_number):
+    vlan = vlan_service.delete_vlan(core_id=core_id, number=vlan_number)
+
+    if vlan is None:
+        return jsonify({ "error": "Vlan not found" }), 404
+
+    return { }, 204
+
+
 @vlans_bp.route("/", methods=["GET"])
 def list_vlans():
     core_id = request.args.get("core_id", type=int)
@@ -108,3 +177,34 @@ def get_vlan(vlan_id):
         return jsonify({ "error": "Vlan not found" }), 404
 
     return jsonify(vlan_schema.dump(vlan)), 200
+
+
+@vlans_bp.route("/<uuid:vlan_id>", methods=["PATCH"])
+def update_core_vlan(vlan_id):
+    data = request.get_json()
+    errors = vlan_schema.validate(data, partial=True)
+    if errors:
+        return jsonify(errors), 400
+
+    vlan = vlan_service.update_vlan(
+            vlan_id=vlan_id,
+            name=data.get('name'),
+            description=data.get('description'),
+            gcode=data.get('gcode'),
+            purpose=data.get('purpose')
+    )
+
+    if not vlan:
+        return jsonify({ "error": "Vlan not found" }), 404
+
+    return jsonify(vlan_schema.dump(vlan)), 200
+
+
+@vlans_bp.route("/<uuid:vlan_id>", methods=["DELETE"])
+def delete_vlan(vlan_id):
+    vlan = vlan_service.delete_vlan(vlan_id=vlan_id)
+
+    if vlan is None:
+        return jsonify({ "error": "Vlan not found" }), 404
+
+    return { }, 204

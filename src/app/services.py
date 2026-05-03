@@ -92,12 +92,59 @@ class VlanService:
         with UnitOfWork() as uow:
             return uow.vlans.get(vlan_id)
 
+    def get_vlan_by_number(self, core_id: int, vlan_number: int) -> Optional[Vlan]:
+        with UnitOfWork() as uow:
+            core = uow.cores.get(core_id)
+            return uow.vlans.get_by_number(core, vlan_number)
+
     def list_vlans(self, core_id: Optional[int]) -> List[Vlan]:
         with UnitOfWork() as uow:
             core = None
             if core_id:
                 core = uow.cores.get(core_id)
             return uow.vlans.list(core)
+
+    def update_vlan(self, name: Optional[str] = None, description: Optional[str] = None, gcode: Optional[str] = None,
+                    purpose: Optional[str] = None, core_id: Optional[int] = None, number: Optional[int] = None,
+                    vlan_id: Optional[uuid.UUID] = None) -> Optional[Vlan]:
+        with UnitOfWork() as uow:
+
+            if core_id and number:
+                core = uow.cores.get(core_id)
+                vlan = uow.vlans.get_by_number(core, number)
+
+            if vlan_id:
+                vlan = uow.vlans.get(vlan_id)
+
+            if not vlan:
+                return None
+
+            if name is not None:
+                vlan.name = name
+            if description is not None:
+                vlan.description = description
+            if gcode is not None:
+                vlan.gcode = gcode
+            if purpose is not None:
+                vlan.purpose = purpose
+
+            return vlan
+
+    def delete_vlan(self, core_id: Optional[int] = None, number: Optional[int] = None,
+                    vlan_id: Optional[uuid.UUID] = None):
+        with UnitOfWork() as uow:
+            if core_id and number:
+                core = uow.cores.get(core_id)
+                vlan = uow.vlans.get_by_number(core, number)
+
+            if vlan_id:
+                vlan = uow.vlans.get(vlan_id)
+
+            if not vlan:
+                return None
+
+            uow.vlans.delete(vlan)
+            return True
 
 
 class VlanRestrictionService:
