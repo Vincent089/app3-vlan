@@ -9,8 +9,9 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  -----------------------------------------------------------------------------
 from flask import Blueprint, jsonify, request
-from app.services import CoreService, VlanService
-from app.schemas import CoreSchema, VlanSchema
+from app.services import CoreService, VlanService, VlanRestrictionService
+from app.schemas import CoreSchema, VlanSchema, VlanRestrictionRangeSchema
+from common.execptions import NotFoundError, AlreadyExistsError, DomainError
 
 cores_bp = Blueprint("cores", __name__)
 core_service = CoreService()
@@ -19,6 +20,10 @@ core_schema = CoreSchema()
 vlans_bp = Blueprint("vlans", __name__)
 vlan_service = VlanService()
 vlan_schema = VlanSchema()
+
+vlan_ranges_bp = Blueprint("vlan_ranges", __name__)
+vlan_restriction_service = VlanRestrictionService()
+vlan_restriction_range_schema = VlanRestrictionRangeSchema()
 
 
 @cores_bp.route("/", methods=["GET"])
@@ -184,4 +189,57 @@ def update_vlan(vlan_id):
 @vlans_bp.route("/<uuid:vlan_id>", methods=["DELETE"])
 def delete_vlan(vlan_id):
     vlan_service.delete_vlan(vlan_id=vlan_id)
+    return { }, 204
+
+
+@vlan_ranges_bp.route("/", methods=["POST"])
+def create_vlan_restriction_range():
+    data = request.get_json()
+    errors = vlan_restriction_range_schema.validate(data)
+    if errors:
+        return jsonify(errors), 400
+
+    vlan_range = vlan_restriction_service.create_vlan_restriction(
+            core_id=data.get("core_id"),
+            description=data.get("description"),
+            start=data.get("start"),
+            end=data.get("end")
+    )
+    return jsonify(vlan_restriction_range_schema.dump(vlan_range)), 201
+
+
+@vlan_ranges_bp.route("/<int:range_id>", methods=["GET"])
+def get_vlan_restriction_range(range_id):
+    vlan_range = vlan_restriction_service.get_vlan_restriction(range_id)
+    if not vlan_range:
+        return jsonify({ "error": "VlanRestrictionRange not found" }), 404
+    return jsonify(vlan_restriction_range_schema.dump(vlan_range)), 200
+
+
+@vlan_ranges_bp.route("/", methods=["GET"])
+def list_vlan_restriction_ranges():
+    core_id = request.args.get("core_id", type=int)
+    vlan_ranges = vlan_restriction_service.list_vlan_restrictions(core_id)
+    return jsonify(vlan_restriction_range_schema.dump(vlan_ranges, many=True)), 200
+
+
+@vlan_ranges_bp.route("/<int:range_id>", methods=["PATCH"])
+def update_vlan_restriction_range(range_id):
+    data = request.get_json()
+    errors = vlan_restriction_range_schema.validate(data, partial=True)
+    if errors:
+        return jsonify(errors), 400
+
+    vlan_range = vlan_restriction_service.update_vlan_restriction(
+            range_id=range_id,
+            description=data.get("description"),
+            start=data.get("start"),
+            end=data.get("end")
+    )
+    return jsonify(vlan_restriction_range_schema.dump(vlan_range)), 200
+
+
+@vlan_ranges_bp.route("/<int:range_id>", methods=["DELETE"])
+def delete_vlan_restriction_range(range_id):
+    vlan_restriction_service.delete_vlan_restriction(range_id)
     return { }, 204

@@ -9,7 +9,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  -----------------------------------------------------------------------------
 from flask import Flask, jsonify
-from app.api import vlans_bp, cores_bp
+from app.api import vlans_bp, cores_bp, vlan_ranges_bp
 from app.db import SessionLocal, init_db
 from common.execptions import DomainError
 
@@ -29,6 +29,7 @@ def handle_domain_error(e):
 
 app.register_blueprint(vlans_bp, url_prefix="/vlans")
 app.register_blueprint(cores_bp, url_prefix="/cores")
+app.register_blueprint(vlan_ranges_bp, url_prefix="/vlanranges")
 
 if __name__ == "__main__":
     app.run(debug=True)

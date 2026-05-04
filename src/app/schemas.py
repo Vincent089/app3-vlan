@@ -26,3 +26,10 @@ class VlanSchema(Schema):
     purpose = fields.Str(required=True)
     name = fields.Str()
     description = fields.Str(allow_none=True)
+
+class VlanRestrictionRangeSchema(Schema):
+    id = fields.Int(dump_only=True)
+    core_id = fields.Int(required=True)
+    description = fields.Str(required=True)
+    start = fields.Int(required=True)
+    end = fields.Int(required=True)

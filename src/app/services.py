@@ -32,7 +32,7 @@ class CoreService:
         with UnitOfWork() as uow:
             return uow.cores.list(datacenter)
 
-    def update_core(self, core_id: int, name: Optional[str] = None, group: Optional[str] = None) -> Optional[Core]:
+    def update_core(self, core_id: int, name: Optional[str] = None, group: Optional[str] = None) -> Core:
         with UnitOfWork() as uow:
             core = uow.cores.get(core_id)
 
@@ -126,7 +126,7 @@ class VlanService:
 
     def update_vlan(self, name: Optional[str] = None, description: Optional[str] = None, gcode: Optional[str] = None,
                     purpose: Optional[str] = None, core_id: Optional[int] = None, number: Optional[int] = None,
-                    vlan_id: Optional[uuid.UUID] = None) -> Optional[Vlan]:
+                    vlan_id: Optional[uuid.UUID] = None) -> Vlan:
         with UnitOfWork() as uow:
 
             if core_id and number:
@@ -169,13 +169,51 @@ class VlanService:
 
 class VlanRestrictionService:
 
-    def get_vlan_restriction_range(self, range_id: int) -> Optional[VlanRestrictionRange]:
+    def create_vlan_restriction(self, core_id: int, description: str, start: int, end: int) -> VlanRestrictionRange:
+        with UnitOfWork() as uow:
+            core = uow.cores.get(core_id)
+
+            if not core:
+                raise NotFoundError(f"Core with id {core_id} not found")
+
+            vlan_range = VlanRestrictionRange(core=core, description=description, start=start, end=end)
+            uow.ranges.add(vlan_range)
+            return vlan_range
+
+    def update_vlan_restriction(self, range_id: int, description: Optional[str] = None,
+                                start: Optional[int] = None, end: Optional[int] = None) -> VlanRestrictionRange:
+        with UnitOfWork() as uow:
+            vlan_range = uow.ranges.get(range_id)
+
+            if not vlan_range:
+                raise NotFoundError(f"VlanRestrictionRange with id {range_id} not found")
+
+            if description is not None:
+                vlan_range.description = description
+            if start is not None:
+                vlan_range.start = start
+            if end is not None:
+                vlan_range.end = end
+
+            return vlan_range
+
+    def get_vlan_restriction(self, range_id: int) -> Optional[VlanRestrictionRange]:
         with UnitOfWork() as uow:
             return uow.ranges.get(range_id)
 
-    def list_vlan_restriction_ranges(self, core_id: Optional[int]) -> List[VlanRestrictionRange]:
+    def list_vlan_restrictions(self, core_id: Optional[int]) -> List[VlanRestrictionRange]:
         with UnitOfWork() as uow:
             core = None
             if core_id:
                 core = uow.cores.get(core_id)
             return uow.ranges.list(core)
+
+    def delete_vlan_restriction(self, range_id: int) -> bool:
+        with UnitOfWork() as uow:
+            vlan_range = uow.ranges.get(range_id)
+
+            if not vlan_range:
+                raise NotFoundError(f"VlanRestrictionRange with id {range_id} not found")
+
+            uow.ranges.delete(vlan_range)
+            return True
