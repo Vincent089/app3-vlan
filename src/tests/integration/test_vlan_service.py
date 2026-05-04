@@ -15,6 +15,7 @@ from unittest.mock import MagicMock
 from ipaddress import IPv4Network
 from app.models import Core, Vlan, VlanRestrictionRange
 from app.services import VlanService
+from common.execptions import AlreadyExistsError
 
 
 @pytest.fixture
@@ -42,7 +43,7 @@ def test_vlan_uniqueness_same_core(mock_uow, core, subnet):
     mock_uow.vlans.get_by_number.return_value = MagicMock(spec=Vlan)
 
     service = VlanService()
-    with pytest.raises(ValueError, match="already exists in core Core01"):
+    with pytest.raises(AlreadyExistsError, match="already exists in core CORE01"):
         service.create_vlan(number=10, subnet=subnet, core_id=1, gcode="G123", purpose='test')
 
 
@@ -60,7 +61,7 @@ def test_vlan_uniqueness_different_core_same_group(mock_uow, subnet):
     mock_uow.vlans.get_by_number_and_core_group.return_value = existing_vlan
 
     service = VlanService()
-    with pytest.raises(ValueError, match="already exists in core Core01"):
+    with pytest.raises(AlreadyExistsError, match="already exists in core CORE01"):
         service.create_vlan(number=10, subnet=subnet, core_id=2, gcode="G123", purpose='test')
 
 

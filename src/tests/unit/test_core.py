@@ -15,7 +15,7 @@ from app.models import Core
 
 def test_core_creation():
     core = Core(datacenter="DDC", name="Core01", size=1024, group="MGMT")
-    assert core.name == "Core01"
+    assert core.name == "CORE01"
     assert core.datacenter == "DDC"
     assert core.size == 1024
     assert core.group == "MGMT"

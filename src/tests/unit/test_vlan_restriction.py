@@ -47,7 +47,7 @@ def test_vlan_restriction_range_contains(core):
 
 def test_vlan_restriction_range_repr(core):
     vlan_range = VlanRestrictionRange(core=core, description='test range', start=10, end=20)
-    assert repr(vlan_range) == "<VlanRestrictionRange Core01 (10-20)>"
+    assert repr(vlan_range) == "<VlanRestrictionRange CORE01 (10-20)>"
 
 
 def test_vlan_restriction_range_array(core):

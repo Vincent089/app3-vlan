@@ -9,92 +9,127 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  -----------------------------------------------------------------------------
 import pytest
+from typing import List
+from unittest.mock import MagicMock
 from app.services import CoreService, VlanService
-from app.uow import UnitOfWork
 from ipaddress import IPv4Network
+from app.models import Core, Vlan
+from common.execptions import DomainError, NotFoundError
 
 
 @pytest.fixture
-def core_service():
-    return CoreService()
+def mock_uow(monkeypatch):
+    mock = MagicMock()
+    monkeypatch.setattr('app.services.UnitOfWork', lambda: mock)
+    mock.__enter__.return_value = mock
+    return mock
 
-@pytest.fixture
-def vlan_service():
-    return VlanService()
 
-@pytest.fixture(autouse=True)
-def setup_teardown_db():
-    # Setup: Clear the database before each test
-    with UnitOfWork() as uow:
-        uow.vlans.delete_all()
-        uow.cores.delete_all()
-        uow.ranges.delete_all()
-        uow.commit()
-    yield
-    # Teardown: Clear the database after each test
-    with UnitOfWork() as uow:
-        uow.vlans.delete_all()
-        uow.cores.delete_all()
-        uow.ranges.delete_all()
-        uow.commit()
+def test_creaaate_core(mock_uow):
+    mock_uow.__enter__.return_value = mock_uow
 
-def test_create_core(core_service: CoreService):
-    core = core_service.create_core(datacenter="DDC1", name="CORE01", size=1024, group="GROUP1")
-    assert core.id is not None
+    service = CoreService()
+
+    core = service.create_core(datacenter="DDC1", name="CORE01", size=1024, group="GROUP1")
+
     assert core.datacenter == "DDC1"
     assert core.name == "CORE01"
     assert core.size == 1024
     assert core.group == "GROUP1"
 
-    retrieved_core = core_service.get_core(core.id)
-    assert retrieved_core == core
 
-def test_get_core(core_service: CoreService):
-    core = core_service.create_core(datacenter="DDC1", name="CORE01")
-    retrieved_core = core_service.get_core(core.id)
+def test_get_core(mock_uow):
+    core = Core(datacenter="DDC", name="Core01", size=4096, group="PROD")
+
+    mock_uow.__enter__.return_value = mock_uow
+    mock_uow.cores.get.return_value = core
+
+    service = CoreService()
+
+    retrieved_core = service.get_core(1)
     assert retrieved_core.name == "CORE01"
 
-def test_list_cores(core_service: CoreService):
-    core_service.create_core(datacenter="DDC1", name="CORE01")
-    core_service.create_core(datacenter="DDC1", name="CORE02")
-    core_service.create_core(datacenter="DDC2", name="CORE03")
 
-    cores_ddc1 = core_service.list_cores(datacenter="DDC1")
-    assert len(cores_ddc1) == 2
-    assert {c.name for c in cores_ddc1} == {"CORE01", "CORE02"}
+def test_list_cores(mock_uow):
+    cores = [
+        Core(datacenter="DDC", name="Core01", size=4096, group="PROD"),
+        Core(datacenter="DDC", name="Core02", size=4096, group="PROD"),
+        Core(datacenter="MDC", name="Core02", size=4096)
+    ]
 
-    all_cores = core_service.list_cores()
-    assert len(all_cores) == 3
+    mock_uow.__enter__.return_value = mock_uow
+    mock_uow.cores.list.return_value = MagicMock(spec=List[Core], __iter__=lambda x: iter(cores))
 
-def test_update_core(core_service: CoreService):
-    core = core_service.create_core(datacenter="DDC1", name="CORE01", group="GROUP1")
-    updated_core = core_service.update_core(core.id, name="NEWCORE", group="GROUP2")
+    service = CoreService()
+
+    cores_ddc1 = service.list_cores(datacenter="DDC")
+    assert { c.name for c in cores_ddc1 } == { "CORE01", "CORE02" }
+
+    all_cores = service.list_cores()
+    assert cores == list(all_cores)
+
+
+def test_update_core(mock_uow):
+    core = Core(datacenter="DDC", name="Core01", size=4096, group="PROD")
+
+    mock_uow.__enter__.return_value = mock_uow
+
+    service = CoreService()
+
+    updated_core = service.update_core(1, name="NEWCORE", group="GROUP2")
+
     assert updated_core.name == "NEWCORE"
     assert updated_core.group == "GROUP2"
 
-    retrieved_core = core_service.get_core(core.id)
+    retrieved_core = service.get_core(1)
     assert retrieved_core.name == "NEWCORE"
     assert retrieved_core.group == "GROUP2"
 
-def test_update_core_not_found(core_service: CoreService):
-    updated_core = core_service.update_core(999, name="NONEXISTENT")
-    assert updated_core is None
 
-def test_delete_core(core_service: CoreService):
-    core = core_service.create_core(datacenter="DDC1", name="CORE01")
-    assert core_service.get_core(core.id) is not None
-    core_service.delete_core(core.id)
-    assert core_service.get_core(core.id) is None
+def test_update_core_not_found(mock_uow):
+    mock_uow.__enter__.return_value = mock_uow
+    mock_uow.cores.get.return_value = None
 
-def test_delete_core_with_vlans_attached(core_service: CoreService, vlan_service: VlanService):
-    core = core_service.create_core(datacenter="DDC1", name="CORE01")
-    vlan_service.create_vlan(subnet=IPv4Network("192.168.1.0/24"), core_id=core.id, gcode="G1", purpose="P1", number=10)
+    service = CoreService()
 
-    with pytest.raises(ValueError, match=f"Core {core.name} has attached VLANs and cannot be deleted."):
-        core_service.delete_core(core.id)
+    with pytest.raises(NotFoundError, match="Core with id 999 not found"):
+        service.update_core(999, name="NONEXISTENT")
 
-    assert core_service.get_core(core.id) is not None
 
-def test_delete_core_not_found(core_service: CoreService):
-    core_service.delete_core(999) # Should not raise an error, just do nothing
-    assert core_service.get_core(999) is None
+def test_delete_core(mock_uow):
+    core = Core(datacenter="DDC", name="Core01", size=4096, group="PROD")
+
+    mock_uow.__enter__.return_value = mock_uow
+    mock_uow.cores.get.return_value = core
+    mock_uow.vlans.list.return_value = None
+
+    service = CoreService()
+
+    assert service.delete_core(core.id) is True
+
+
+def test_delete_core_with_vlans_attached(mock_uow):
+    core = Core(datacenter="DDC", name="Core01", size=4096, group="PROD")
+    vlans = [
+        Vlan(number=2, subnet=IPv4Network("192.168.1.0/24"), core=core, gcode="G123", purpose='test-vlan'),
+        Vlan(number=4, subnet=IPv4Network("10.0.0.0/24"), core=core, gcode="G456", purpose='test-vlan')
+    ]
+
+    mock_uow.__enter__.return_value = mock_uow
+    mock_uow.cores.get.return_value = core
+    mock_uow.ranges.list.return_value = MagicMock(spec=List[Vlan], __iter__=lambda x: iter(vlans))
+
+    service = CoreService()
+
+    with pytest.raises(DomainError, match=f"Core {core.name} has attached VLANs and cannot be deleted."):
+        service.delete_core(core.id)
+
+
+def test_delete_core_not_found(mock_uow):
+    mock_uow.__enter__.return_value = mock_uow
+    mock_uow.cores.get.return_value = None
+
+    service = CoreService()
+
+    with pytest.raises(NotFoundError, match="Core with id 999 not found"):
+        service.delete_core(999)

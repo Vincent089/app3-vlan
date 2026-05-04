@@ -41,7 +41,7 @@ def test_vlan_str_representation(core, subnet):
 
 def test_vlan_repr(core, subnet):
     vlan = Vlan(number=10, subnet=subnet, core=core, gcode="G123", purpose='test-vlan')
-    assert repr(vlan) == "<Vlan Core01 10>"
+    assert repr(vlan) == "<Vlan CORE01 10>"
 
 
 def test_vlan_number_too_low_raises_error(core, subnet):
